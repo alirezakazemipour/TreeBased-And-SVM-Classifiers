@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, classification_report
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -34,18 +34,22 @@ if __name__ == "__main__":
     full_batch_size = X.shape[0]
     n_class = np.max(Y)
     cv_num = 5
-    max_depth = 15
+    max_tree = 40
     seed = 123
     history = {"train_acc": [], "val_acc": []}
-    best_depth = None
+    best_n_tree = None
     best_val_acc = 0
 
-    for depth in tqdm(range(1, 1 + max_depth)):
+    for tree in tqdm(range(1, 1 + max_tree)):
         avg_val_acc = 0
         avg_train_acc = 0
 
         for x_train, y_train, x_val, y_val in choose_fold(X, Y, cv_num):
-            clf = DecisionTreeClassifier(criterion="entropy", random_state=seed, max_depth=depth)
+            clf = RandomForestClassifier(n_estimators=tree,
+                                         criterion="entropy",
+                                         random_state=seed,
+                                         max_depth=7,  # best depth of DT from previous section
+                                         bootstrap=False)
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_train)
             avg_train_acc += (np.sum(y_pred == y_train) / len(y_pred)) * 100
@@ -57,11 +61,11 @@ if __name__ == "__main__":
 
         if history["val_acc"][-1] > best_val_acc:
             best_val_acc = history["val_acc"][-1]
-            best_depth = depth
+            best_n_tree = tree
 
-    print("best depth: {}, best val acc:{:.2f}".format(best_depth, best_val_acc))
-    plt.plot(range(max_depth), history["train_acc"], c="r")
-    plt.plot(range(max_depth), history["val_acc"], c="b")
+    print("best no. tree: {}, best val acc:{:.2f}".format(best_n_tree, best_val_acc))
+    plt.plot(range(max_tree), history["train_acc"], c="r")
+    plt.plot(range(max_tree), history["val_acc"], c="b")
     plt.legend(history.keys())
     plt.grid()
     plt.show()
