@@ -34,7 +34,7 @@ if __name__ == "__main__":
     full_batch_size = X.shape[0]
     n_class = np.max(Y)
     cv_num = 5
-    max_tree = 40
+    max_tree = 50
     seed = 123
     history = {"train_acc": [], "val_acc": []}
     best_n_tree = None
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             best_val_acc = history["val_acc"][-1]
             best_n_tree = tree
 
-    print("best no. tree: {}, best val acc:{:.2f}".format(best_n_tree, best_val_acc))
+    print("best no. tree: {}, best val acc: {:.2f}".format(best_n_tree, best_val_acc))
     plt.plot(range(max_tree), history["train_acc"], c="r")
     plt.plot(range(max_tree), history["val_acc"], c="b")
     plt.legend(history.keys())
