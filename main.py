@@ -1,7 +1,22 @@
-
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from tqdm import tqdm
+
+
+def choose_fold(x, y, n):
+    for i in range(n):
+        x_val = x[i * full_batch_size // cv_num: (i + 1) * full_batch_size // cv_num]
+        y_val = y[i * full_batch_size // cv_num: (i + 1) * full_batch_size // cv_num]
+
+        x_train = np.delete(x, range(i * full_batch_size // cv_num, (i + 1) * full_batch_size // cv_num), axis=0)
+        y_train = np.delete(y, range(i * full_batch_size // cv_num, (i + 1) * full_batch_size // cv_num), axis=0)
+
+        yield x_train, y_train, x_val, y_val
+
 
 if __name__ == "__main__":
     data = []
@@ -16,21 +31,55 @@ if __name__ == "__main__":
     data = np.stack(data)
     X = data[:, 1:-1]
     Y = data[:, -1].astype(int)
-    # print(X.shape)
-    # print(Y.shape)
+    full_batch_size = X.shape[0]
+    n_class = np.max(Y)
     cv_num = 5
+    max_depth = 15
     seed = 123
-    for i in range(cv_num):
-        x_val = X[i * len(X) // cv_num: (i + 1) * len(X) // cv_num]
-        y_val = Y[i * len(Y) // cv_num: (i + 1) * len(Y) // cv_num]
+    history = {"train_acc": [], "val_acc": []}
+    best_depth = None
+    best_val_acc = 0
 
-        x_train = np.delete(X, range(i * len(X) // cv_num, (i + 1) * len(X) // cv_num), axis=0)
-        y_train = np.delete(Y, range(i * len(Y) // cv_num, (i + 1) * len(Y) // cv_num), axis=0)
+    for depth in tqdm(range(1, 1 + max_depth)):
+        avg_val_acc = 0
+        avg_train_acc = 0
 
-        clf = DecisionTreeClassifier(criterion="entropy", random_state=seed)
-        clf.fit(x_train, y_train)
-        results = clf.predict(x_val)
-        # print('predictions: ', results)
-        # print("test labels: ", list(np.unique(y_val)))
-        print(f'Accuracy: {(np.sum(results == y_val) / len(results)) * 100: .2f}%')
-        # print(confusion_matrix(y_val, results))
+        for x_train, y_train, x_val, y_val in choose_fold(X, Y, cv_num):
+            clf = DecisionTreeClassifier(criterion="entropy", random_state=seed, max_depth=depth)
+            clf.fit(x_train, y_train)
+            y_pred = clf.predict(x_train)
+            avg_train_acc += (np.sum(y_pred == y_train) / len(y_pred)) * 100
+            y_pred = clf.predict(x_val)
+            avg_val_acc += (np.sum(y_pred == y_val) / len(y_pred)) * 100
+
+        history["train_acc"].append(avg_train_acc / cv_num)
+        history["val_acc"].append(avg_val_acc / cv_num)
+
+        if history["val_acc"][-1] > best_val_acc:
+            best_val_acc = history["val_acc"][-1]
+            best_depth = depth
+
+    print("best depth:", best_depth)
+    print("best val acc:{0:.2f}".format(best_val_acc))
+    plt.plot(range(max_depth), history["train_acc"], c="r")
+    plt.plot(range(max_depth), history["val_acc"], c="b")
+    plt.legend(history.keys())
+    plt.grid()
+    plt.show()
+
+    # clf = DecisionTreeClassifier(criterion="entropy", random_state=seed, max_depth=best_depth)
+    # clf.fit(x_train, y_val)
+    # y_pred = clf.predict(x_train)
+    # con_mat = confusion_matrix(y_val, y_pred)
+    # print(con_mat)
+    # con_mat_norm = np.around(con_mat.astype('float') / con_mat.sum(axis=1)[:, np.newaxis], decimals=2)
+    # con_mat_df = pd.DataFrame(con_mat_norm, index=[i for i in range(n_class)], columns=[i for i in range(n_class)])
+    # figure = plt.figure(figsize=(n_class, n_class))
+    # sns.heatmap(con_mat_df, annot=True, cmap=plt.cm.Blues)
+    # plt.tight_layout()
+    # plt.ylabel('True label')
+    # plt.xlabel('Predicted label')
+    # plt.title('confusion matrix')
+    # plt.show()
+    # report = classification_report(y_val, y_pred)
+    # print(report)
