@@ -59,8 +59,7 @@ if __name__ == "__main__":
             best_val_acc = history["val_acc"][-1]
             best_depth = depth
 
-    print("best depth:", best_depth)
-    print("best val acc:{0:.2f}".format(best_val_acc))
+    print("best depth: {}, best val acc:{:.2f}".format(best_depth, best_val_acc))
     plt.plot(range(max_depth), history["train_acc"], c="r")
     plt.plot(range(max_depth), history["val_acc"], c="b")
     plt.legend(history.keys())
