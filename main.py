@@ -34,22 +34,27 @@ if __name__ == "__main__":
     full_batch_size = X.shape[0]
     n_class = np.max(Y)
     cv_num = 5
-    max_tree = 50
+    max_tree = 45  # best no tress from previous run
+    max_depth = 7  # best depth of DT from previous section
     seed = 123
+    n_samples = np.linspace(0.1, 1, 10)
+
     history = {"train_acc": [], "val_acc": []}
-    best_n_tree = None
+    best_n_sample = None
     best_val_acc = 0
 
-    for tree in tqdm(range(1, 1 + max_tree)):
+    for sample in tqdm(n_samples):
         avg_val_acc = 0
         avg_train_acc = 0
 
         for x_train, y_train, x_val, y_val in choose_fold(X, Y, cv_num):
-            clf = RandomForestClassifier(n_estimators=tree,
+            clf = RandomForestClassifier(n_estimators=max_tree,
                                          criterion="entropy",
                                          random_state=seed,
-                                         max_depth=7,  # best depth of DT from previous section
-                                         bootstrap=False)
+                                         max_depth=max_depth,
+                                         bootstrap=True,
+                                         max_samples=sample
+                                         )
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_train)
             avg_train_acc += (np.sum(y_pred == y_train) / len(y_pred)) * 100
@@ -61,11 +66,11 @@ if __name__ == "__main__":
 
         if history["val_acc"][-1] > best_val_acc:
             best_val_acc = history["val_acc"][-1]
-            best_n_tree = tree
+            best_n_sample = sample
 
-    print("best no. tree: {}, best val acc: {:.2f}".format(best_n_tree, best_val_acc))
-    plt.plot(range(max_tree), history["train_acc"], c="r")
-    plt.plot(range(max_tree), history["val_acc"], c="b")
+    print("best no. samples per tree: {}, best val acc: {:.2f}".format(best_n_sample, best_val_acc))
+    plt.plot(range(len(n_samples)), history["train_acc"], c="r")
+    plt.plot(range(len(n_samples)), history["val_acc"], c="b")
     plt.legend(history.keys())
     plt.grid()
     plt.show()
