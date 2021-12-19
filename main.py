@@ -44,6 +44,11 @@ if __name__ == "__main__":
     best_n_sample = None
     best_val_acc = 0
 
+    np.random.seed(seed)
+    shuffler = np.random.permutation(len(X))  # shuffling the dataset
+    X = X[shuffler]
+    Y = Y[shuffler]
+
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
     for sample in tqdm([1]):
@@ -52,8 +57,6 @@ if __name__ == "__main__":
 
         for x_train, y_train, x_val, y_val in choose_fold(X, Y, cv_num):
             clf = SVC(C=1e+3, gamma=1e-4, kernel="rbf")
-            print(x_train.shape)
-            print(y_train.shape)
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_train)
             avg_train_acc += (np.sum(y_pred == y_train) / len(y_pred)) * 100
