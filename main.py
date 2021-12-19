@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, classification_report
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -46,18 +46,14 @@ if __name__ == "__main__":
 
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
-    for sample in tqdm(n_samples):
+    for sample in tqdm([1]):
         avg_val_acc = 0
         avg_train_acc = 0
 
         for x_train, y_train, x_val, y_val in choose_fold(X, Y, cv_num):
-            clf = RandomForestClassifier(n_estimators=max_tree,
-                                         criterion="entropy",
-                                         random_state=seed,
-                                         max_depth=max_depth,
-                                         bootstrap=True,
-                                         max_samples=sample
-                                         )
+            clf = SVC(C=1e+3, gamma=1e-4, kernel="rbf")
+            print(x_train.shape)
+            print(y_train.shape)
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_train)
             avg_train_acc += (np.sum(y_pred == y_train) / len(y_pred)) * 100
@@ -72,11 +68,11 @@ if __name__ == "__main__":
             best_n_sample = sample
 
     print("best no. samples per tree: {}, best val acc: {:.2f}".format(best_n_sample, best_val_acc))
-    plt.plot(range(len(n_samples)), history["train_acc"], c="r")
-    plt.plot(range(len(n_samples)), history["val_acc"], c="b")
-    plt.legend(history.keys())
-    plt.grid()
-    plt.show()
+    # plt.plot(range(len(n_samples)), history["train_acc"], c="r")
+    # plt.plot(range(len(n_samples)), history["val_acc"], c="b")
+    # plt.legend(history.keys())
+    # plt.grid()
+    # plt.show()
 
     # clf = DecisionTreeClassifier(criterion="entropy", random_state=seed, max_depth=best_depth)
     # clf.fit(x_train, y_val)
