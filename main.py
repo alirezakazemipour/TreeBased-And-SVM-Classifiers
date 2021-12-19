@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
+from sklearn.preprocessing import StandardScaler
 
 
 def choose_fold(x, y, n):
@@ -30,9 +31,9 @@ if __name__ == "__main__":
 
     data = np.stack(data)
     X = data[:, 1:-1]
-    Y = data[:, -1].astype(int)
+    Y = data[:, -1].astype(int) - 1
     full_batch_size = X.shape[0]
-    n_class = np.max(Y)
+    n_class = np.max(Y) + 1
     cv_num = 5
     max_tree = 45  # best no tress from previous run
     max_depth = 7  # best depth of DT from previous section
@@ -43,6 +44,8 @@ if __name__ == "__main__":
     best_n_sample = None
     best_val_acc = 0
 
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
     for sample in tqdm(n_samples):
         avg_val_acc = 0
         avg_train_acc = 0
