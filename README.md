@@ -1,6 +1,6 @@
 # TreeBased-And-SVM-Classifiers
 
-#### Someday the code will be written in NumPy! (Don't have time at the time of writing the code 🥺)
+#### Someday the code will be written in NumPy! (Didn't have time at the time of writing the code 🥺)
 > [numpy_ml](https://github.com/ddbourgin/numpy-ml) 🥺
 
 ### Dataset's License
@@ -11,5 +11,4 @@
   howpublished = {UCI Machine Learning Repository}
 }
 ```
-
 
